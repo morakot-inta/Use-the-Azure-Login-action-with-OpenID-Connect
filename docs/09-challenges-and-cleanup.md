@@ -9,7 +9,7 @@
 
 2. **Self-escalation attack (why Lab 2 used a separate resource group):** In a throwaway resource group, give a test
    managed identity **Contributor on the resource group that contains the identity itself**. From a workflow on `main`,
-   use `az identity federated-credential create` to add a credential for `repo:OWNER/REPO:ref:refs/heads/evil`.
+   use `az identity federated-credential create` to add a credential for `<PREFIX>:ref:refs/heads/evil`.
    Now push a branch called `evil` and log in from it. What does this teach you about where to put identities, and
    about who can write to them? Delete the test identity when you are done.
 

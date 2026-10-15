@@ -53,7 +53,7 @@ gh workflow run 01-login-oidc.yml --ref feature/test -f identity=managed-identit
 Typical error:
 ```
 AADSTS700213: No matching federated identity record found for presented assertion subject
-'repo:OWNER/REPO:ref:refs/heads/feature/test'
+'repo:OWNER@OWNER_ID/REPO@REPO_ID:ref:refs/heads/feature/test'
 ```
 Both identities fail the same way, because neither has a credential for this subject.
 
@@ -63,7 +63,7 @@ Both identities fail the same way, because neither has a credential for this sub
 ## Troubleshooting checklist
 
 1. Is `id-token: write` set on the job?
-2. Does the `sub` from the error, or from Lab 4, match a credential **exactly**, including case?
+2. Does the `sub` from the error, or from Lab 4, match a credential **exactly**, including case and the `@ID` parts?
 3. Does the job use an `environment`? If so, the subject is `environment:NAME`, not `ref:...`.
 4. Is the client ID the *application* ID (app registration) or the *client* ID (managed identity), not an object or principal ID,, and is the tenant ID correct?
 5. Login works but commands fail with `AuthorizationFailed`? Then OIDC is fine. Check the **RBAC** role and scope.

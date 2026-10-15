@@ -18,7 +18,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Token subject becomes repo:OWNER/REPO:environment:production
+    # Token subject becomes <PREFIX>:environment:production (see docs/00-concepts.md)
     environment: production
     env:
       RG: ${{ vars.AZURE_RESOURCE_GROUP }}

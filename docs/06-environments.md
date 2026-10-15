@@ -19,7 +19,7 @@ gh workflow run 04-deploy-environment.yml --ref main -f identity=app-registratio
 
 The run pauses at **Waiting for review**. Approve it in the Actions UI. The job then:
 
-1. Logs in with OIDC (subject `repo:OWNER/REPO:environment:production`)
+1. Logs in with OIDC (subject `<PREFIX>:environment:production`)
 2. Creates a storage account in your lab resource group (the name comes from a hash of your repo name)
 3. Prints its blob endpoint
 

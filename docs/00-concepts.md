@@ -54,12 +54,31 @@ creates and manages for you.
 
 ## Subject formats you will use
 
+Every subject starts with a **prefix** that names the repo. GitHub uses one of two formats:
+
+| Prefix format | Example |
+|---------------|---------|
+| Classic | `repo:OWNER/REPO` |
+| **Immutable** (includes numeric IDs) | `repo:OWNER@OWNER_ID/REPO@REPO_ID`, for example `repo:morakot-inta@73270904/Use-the-Azure-Login-action-with-OpenID-Connect@1420726188` |
+
+With the immutable format, the trust breaks if someone deletes your account or repo and another person creates one with
+the **same name**, because the new one gets a different ID. `OWNER_ID` is the ID of your user account, or of the
+organization if the repo belongs to one.
+
+**Don't guess the prefix.** Ask GitHub which one your repo uses (Lab 1, Step 0):
+
+```bash
+gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub_claim_prefix
+```
+
+In this lab, `<PREFIX>` means that value:
+
 | Workflow context | `sub` claim |
 |------------------|-------------|
-| Job on branch `main` (no environment) | `repo:OWNER/REPO:ref:refs/heads/main` |
-| Job that uses `environment: production` | `repo:OWNER/REPO:environment:production` |
-| `pull_request` event | `repo:OWNER/REPO:pull_request` |
-| Tag `v1.0.0` | `repo:OWNER/REPO:ref:refs/tags/v1.0.0` |
+| Job on branch `main` (no environment) | `<PREFIX>:ref:refs/heads/main` |
+| Job that uses `environment: production` | `<PREFIX>:environment:production` |
+| `pull_request` event | `<PREFIX>:pull_request` |
+| Tag `v1.0.0` | `<PREFIX>:ref:refs/tags/v1.0.0` |
 
 > **Important:** When a job uses an `environment`, the subject becomes the **environment** form,
 > even if it runs on `main`. You will see this in Lab 4 and Lab 6.

@@ -3,7 +3,7 @@
 Now you build the same trust with a **user-assigned managed identity (UAMI)**. There is no Entra app registration,
 and a managed identity can **never** have a client secret. The workflows only need a different `client-id`.
 
-Use the same terminal and variables as in Lab 1 (`GITHUB_REPO`, `RG`, `LOCATION`, `SUB_ID`, `TENANT_ID`).
+Use the same terminal and variables as in Lab 1 (`GITHUB_REPO`, `SUBJECT_PREFIX`, `RG`, `LOCATION`, `SUB_ID`, `TENANT_ID`).
 If you skipped Lab 1, run its [Step 0](01-setup-app-registration.md#step-0-variables) and
 [Step 1](01-setup-app-registration.md#step-1-resource-group-for-the-workload) first.
 
@@ -70,16 +70,17 @@ az identity federated-credential create \
   --resource-group "$ID_RG" --identity-name id-gh-oidc-lab \
   --name gh-branch-main \
   --issuer "https://token.actions.githubusercontent.com" \
-  --subject "repo:$GITHUB_REPO:ref:refs/heads/main" \
+  --subject "$SUBJECT_PREFIX:ref:refs/heads/main" \
   --audiences "api://AzureADTokenExchange" -o table
 ```
 
 Portal: **Managed Identities → id-gh-oidc-lab → Settings → Federated credentials → Add credential** →
-scenario **GitHub Actions deploying Azure resources** → Organization = your GitHub username or org, Entity **Branch**, Branch **main**.
+scenario **GitHub Actions deploying Azure resources** → Organization = your GitHub username or org (and its ID if asked), Entity **Branch**, Branch **main**.
+Check that the subject it builds equals `$SUBJECT_PREFIX:ref:refs/heads/main`.
 
 ## Step 5: Your turn: the environment credential
 
-Create `gh-env-production` for subject `repo:$GITHUB_REPO:environment:production`.
+Create `gh-env-production` for subject `$SUBJECT_PREFIX:environment:production`.
 
 <details><summary>Solution</summary>
 
@@ -88,7 +89,7 @@ az identity federated-credential create \
   --resource-group "$ID_RG" --identity-name id-gh-oidc-lab \
   --name gh-env-production \
   --issuer "https://token.actions.githubusercontent.com" \
-  --subject "repo:$GITHUB_REPO:environment:production" \
+  --subject "$SUBJECT_PREFIX:environment:production" \
   --audiences "api://AzureADTokenExchange" -o none
 ```
 </details>

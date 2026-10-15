@@ -22,6 +22,26 @@ TENANT_ID=$(az account show --query tenantId -o tsv)
 echo "$SUB_ID $TENANT_ID"
 ```
 
+Now ask GitHub what the **subject prefix** of your repo's tokens looks like (see [Lab 0](00-concepts.md#subject-formats-you-will-use)):
+
+```bash
+gh api "repos/$GITHUB_REPO/actions/oidc/customization/sub"
+SUBJECT_PREFIX=$(gh api "repos/$GITHUB_REPO/actions/oidc/customization/sub" --jq .sub_claim_prefix)
+echo "$SUBJECT_PREFIX"
+```
+
+| Output | Meaning |
+|--------|---------|
+| `repo:OWNER/REPO` | Classic format |
+| `repo:OWNER@123/REPO@456` | **Immutable** format: owner ID and repo ID are part of the subject |
+
+You can also look up the IDs yourself:
+```bash
+gh api "repos/$GITHUB_REPO" --jq '{owner: .owner.login, owner_id: .owner.id, owner_type: .owner.type, repo_id: .id}'
+```
+
+Every federated credential below uses `$SUBJECT_PREFIX`, so it matches your repo whichever format it uses.
+
 ## Step 1: Resource group for the workload
 
 ```bash
@@ -94,7 +114,7 @@ cat > fic-main.json <<EOF
 {
   "name": "gh-branch-main",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:$GITHUB_REPO:ref:refs/heads/main",
+  "subject": "$SUBJECT_PREFIX:ref:refs/heads/main",
   "audiences": ["api://AzureADTokenExchange"],
   "description": "GitHub Actions jobs on main"
 }
@@ -107,8 +127,13 @@ Portal: **App registrations → gh-oidc-lab → Certificates & secrets → Feder
 scenario **GitHub Actions deploying Azure resources** → fill in Organization, Repository, Entity type **Branch**, Branch **main**.
 Look at the *Subject identifier* that the portal builds for you.
 
-> **Personal GitHub account (no organization)?** Type your **GitHub username** in the *Organization* field.
-> GitHub treats a user and an organization the same way here: `repo:<username>/<repo>:...`
+> **Personal GitHub account (no organization)?** Type your **GitHub username** in *Organization*. If the portal asks
+> for an **Organization ID** / **Repository ID**, use `owner_id` and `repo_id` from Step 0. A personal account's
+> "organization ID" is your **user ID**.
+>
+> **Always compare** the *Subject identifier* that the portal shows with `$SUBJECT_PREFIX:ref:refs/heads/main`.
+> If they differ, the login fails with `AADSTS700213`. If the portal can't build the right one, choose the
+> **Other issuer** scenario and type the issuer and subject yourself.
 
 | Field | Why |
 |-------|-----|
@@ -122,8 +147,8 @@ Create these yourself, using a JSON file or the portal:
 
 | name | subject | Used in |
 |------|---------|---------|
-| `gh-env-production` | `repo:$GITHUB_REPO:environment:production` | Labs 4 and 6 |
-| `gh-pull-request` | `repo:$GITHUB_REPO:pull_request` | Lab 7 |
+| `gh-env-production` | `$SUBJECT_PREFIX:environment:production` | Labs 4 and 6 |
+| `gh-pull-request` | `$SUBJECT_PREFIX:pull_request` | Lab 7 |
 
 <details><summary>Solution</summary>
 
@@ -133,7 +158,7 @@ for pair in "gh-env-production|environment:production" "gh-pull-request|pull_req
   az ad app federated-credential create --id "$APP_ID" -o none --parameters "{
     \"name\": \"$name\",
     \"issuer\": \"https://token.actions.githubusercontent.com\",
-    \"subject\": \"repo:$GITHUB_REPO:$entity\",
+    \"subject\": \"$SUBJECT_PREFIX:$entity\",
     \"audiences\": [\"api://AzureADTokenExchange\"]
   }"
 done
@@ -168,7 +193,7 @@ gh variable set AZURE_RESOURCE_GROUP --repo "$GITHUB_REPO" --body "$RG"
 ## Checkpoint
 
 - [ ] App **Certificates & secrets → Client secrets** is **empty**. That is the goal of OIDC.
-- [ ] 3 federated credentials, and each subject contains your exact `OWNER/REPO`
+- [ ] 3 federated credentials, and each subject starts with your exact `$SUBJECT_PREFIX`
 - [ ] Contributor on `rg-oidc-lab` only
 - [ ] 3 secrets, 1 variable and the `production` environment exist in GitHub
 

@@ -16,8 +16,8 @@ The workflow has **two jobs**:
 
 | Job | Environment | Expected `sub` |
 |-----|-------------|----------------|
-| `claims-branch` | none | `repo:OWNER/REPO:ref:refs/heads/main` |
-| `claims-environment` | `production` | `repo:OWNER/REPO:environment:production` |
+| `claims-branch` | none | `<PREFIX>:ref:refs/heads/main` |
+| `claims-environment` | `production` | `<PREFIX>:environment:production` |
 
 Notice that this workflow never mentions an Azure identity. The token comes from **GitHub**, and it is the same whether
 you then sign in with the app registration or the managed identity.
@@ -35,7 +35,8 @@ you then sign in with the app registration or the managed identity.
 4. Look at the other claims: `repository_owner_id`, `job_workflow_ref`, `actor`, `event_name`. These are useful
    for advanced trust rules (see Lab 9).
 
-> If GitHub shows a different `sub` format than in the table (for example, because your org has customized the
-> subject claim), **this lab is how you find the exact value** to put in the federated credential.
+> Is the prefix `repo:OWNER@ID/REPO@ID` (immutable) or `repo:OWNER/REPO` (classic)? It must match Lab 1, Step 0.
+> Also look at the `repository_owner_id` and `repository_id` claims: they are the IDs in the immutable prefix.
+> If the `sub` is different from what you expected, **this lab is how you find the exact value** to put in the federated credential.
 
 Next: [Lab 5: Break it on purpose](05-break-it.md)

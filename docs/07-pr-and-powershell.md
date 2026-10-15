@@ -11,7 +11,7 @@ Workflow: [`.github/workflows/05-pull-request.yml`](../.github/workflows/05-pull
    git add . && git commit -m "PR test" && git push -u origin pr-test
    gh pr create --fill
    ```
-2. The workflow runs on `pull_request`. Its subject is `repo:OWNER/REPO:pull_request`, which is the same for **every** PR,
+2. The workflow runs on `pull_request`. Its subject is `<PREFIX>:pull_request`, which is the same for **every** PR,
    whatever the branch name.
 3. It runs read-only checks (a "plan" or "what-if" style job).
 
