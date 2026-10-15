@@ -35,6 +35,13 @@ kubectl version --client && kubelogin --version
 
 ### 1.2 Create the AKS cluster (about 5–10 minutes)
 
+First check that you are in the right subscription and that the lab resource group exists (Lab 1, Step 1):
+
+```bash
+az account show --query "{name:name, id:id}" -o table
+az group show -n rg-oidc-lab -o table     # ResourceGroupNotFound? -> wrong subscription, or run Lab 1 Step 1
+```
+
 ```bash
 az provider register --namespace Microsoft.ContainerService   # once per subscription
 
