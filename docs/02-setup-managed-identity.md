@@ -3,14 +3,25 @@
 Now you build the same trust with a **user-assigned managed identity (UAMI)**. There is no Entra app registration,
 and a managed identity can **never** have a client secret. The workflows only need a different `client-id`.
 
-Use the same terminal and variables as in Lab 1 (`GITHUB_REPO`, `SUBJECT_PREFIX`, `RG`, `LOCATION`, `SUB_ID`, `TENANT_ID`).
-If you skipped Lab 1, run its [Step 0](01-setup-app-registration.md#step-0-variables) and
-[Step 1](01-setup-app-registration.md#step-1-resource-group-for-the-workload) first.
+## Step 0: Load the variables
+
+```bash
+source ~/oidc-lab.env
+for v in GITHUB_REPO SUBJECT_PREFIX RG ID_RG LOCATION SUB_ID TENANT_ID; do
+  printf '%-15s %s\n' "$v" "${!v:-<EMPTY!>}"
+done
+```
+
+If anything shows `<EMPTY!>`, or the file does not exist, do [Lab 1, Step 0](01-setup-app-registration.md#step-0-variables)
+(including *Save the variables*) first. If you skipped Lab 1, also do its
+[Step 1](01-setup-app-registration.md#step-1-resource-group-for-the-workload).
+
+> **Typical errors when a variable is empty:** `LocationRequired` (empty `$LOCATION`), then `ResourceGroupNotFound`
+> for `rg-oidc-lab-identity` (because Step 1 failed with the empty `$LOCATION`).
 
 ## Step 1: A separate resource group for the identity
 
 ```bash
-ID_RG="rg-oidc-lab-identity"
 az group create -n "$ID_RG" -l "$LOCATION" -o table
 ```
 
@@ -27,7 +38,12 @@ az identity create -g "$ID_RG" -n "id-gh-oidc-lab" -l "$LOCATION" -o json
 MI_CLIENT_ID=$(az identity show -g "$ID_RG" -n id-gh-oidc-lab --query clientId -o tsv)
 MI_PRINCIPAL_ID=$(az identity show -g "$ID_RG" -n id-gh-oidc-lab --query principalId -o tsv)
 echo "MI_CLIENT_ID=$MI_CLIENT_ID  MI_PRINCIPAL_ID=$MI_PRINCIPAL_ID"
+echo "MI_CLIENT_ID=\"$MI_CLIENT_ID\"" >> ~/oidc-lab.env
+echo "MI_PRINCIPAL_ID=\"$MI_PRINCIPAL_ID\"" >> ~/oidc-lab.env
 ```
+
+> `MI_CLIENT_ID` empty? The `az identity create` above failed. Read its error, fix the cause (usually Step 0 or Step 1),
+> and run it again.
 
 Portal: **Managed Identities → Create** → resource group `rg-oidc-lab-identity`, name `id-gh-oidc-lab`.
 

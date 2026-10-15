@@ -25,6 +25,12 @@ You will learn that there are **two layers of permission**:
 
 ## Step 1: Create the cluster
 
+### 1.0 Load the variables
+
+```bash
+source ~/oidc-lab.env    # from Lab 1, Step 0
+```
+
 ### 1.1 Install kubectl and kubelogin (once)
 
 ```bash

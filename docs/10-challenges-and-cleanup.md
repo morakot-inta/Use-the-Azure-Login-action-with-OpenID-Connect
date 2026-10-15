@@ -25,10 +25,10 @@
 
 ## Cleanup (by hand, in this order)
 
-Set the variables again if your terminal was closed:
+Load the variables again if your terminal was closed:
 
 ```bash
-GITHUB_REPO="your-user/your-repo"
+source ~/oidc-lab.env
 APP_ID=$(az ad app list --display-name gh-oidc-lab --query "[0].appId" -o tsv)
 SP_OBJECT_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
 MI_PRINCIPAL_ID=$(az identity show -g rg-oidc-lab-identity -n id-gh-oidc-lab --query principalId -o tsv)

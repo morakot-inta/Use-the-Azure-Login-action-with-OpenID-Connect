@@ -42,6 +42,39 @@ gh api "repos/$GITHUB_REPO" --jq '{owner: .owner.login, owner_id: .owner.id, own
 
 Every federated credential below uses `$SUBJECT_PREFIX`, so it matches your repo whichever format it uses.
 
+### Save the variables (important)
+
+Shell variables disappear when the terminal closes. **Azure Cloud Shell also ends your session after about 20 minutes
+without use.** An empty variable causes confusing errors, for example `LocationRequired` or `ResourceGroupNotFound`.
+Save the variables to a file:
+
+```bash
+cat > ~/oidc-lab.env <<EOF
+GITHUB_REPO="$GITHUB_REPO"
+SUBJECT_PREFIX="$SUBJECT_PREFIX"
+RG="$RG"
+ID_RG="rg-oidc-lab-identity"
+LOCATION="$LOCATION"
+SUB_ID="$SUB_ID"
+TENANT_ID="$TENANT_ID"
+EOF
+cat ~/oidc-lab.env
+```
+
+**Every time you open a new terminal**, load them again and check that none is empty:
+
+```bash
+source ~/oidc-lab.env
+for v in GITHUB_REPO SUBJECT_PREFIX RG ID_RG LOCATION SUB_ID TENANT_ID; do
+  printf '%-15s %s\n' "$v" "${!v:-<EMPTY!>}"
+done
+```
+
+> `SUBJECT_PREFIX` empty? `gh` is not logged in. Run `gh auth login`, or type the value yourself
+> (see [Lab 0](00-concepts.md#subject-formats-you-will-use)).
+
+Later steps add more values to this file with `echo 'NAME="value"' >> ~/oidc-lab.env`.
+
 ## Step 1: Resource group for the workload
 
 ```bash
@@ -55,6 +88,7 @@ The workflows will deploy here. The identity will get access to this resource gr
 ```bash
 APP_ID=$(az ad app create --display-name "gh-oidc-lab" --query appId -o tsv)
 echo "APP_ID=$APP_ID"
+echo "APP_ID=\"$APP_ID\"" >> ~/oidc-lab.env
 ```
 
 Portal: **Microsoft Entra ID → App registrations → New registration** → name `gh-oidc-lab` → **Register**.
@@ -76,6 +110,7 @@ An app registration is only a *definition*. To give it Azure roles, your tenant 
 az ad sp create --id "$APP_ID" -o none
 SP_OBJECT_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
 echo "SP_OBJECT_ID=$SP_OBJECT_ID"
+echo "SP_OBJECT_ID=\"$SP_OBJECT_ID\"" >> ~/oidc-lab.env
 ```
 
 Portal: the portal creates it for you when you register an app. You can find it under

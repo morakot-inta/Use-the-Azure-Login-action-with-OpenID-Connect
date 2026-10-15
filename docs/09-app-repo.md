@@ -32,6 +32,7 @@ flowchart LR
 ## Step 0: Variables
 
 ```bash
+source ~/oidc-lab.env                     # from Lab 1, Step 0
 APP_REPO="morakot-inta/oidc-lab-app"      # your fork or copy
 RG="rg-oidc-lab"
 ID_RG="rg-oidc-lab-identity"
@@ -42,6 +43,14 @@ TENANT_ID=$(az account show --query tenantId -o tsv)
 
 APP_PREFIX=$(gh api "repos/$APP_REPO/actions/oidc/customization/sub" --jq .sub_claim_prefix)
 echo "$APP_PREFIX"
+
+# Save them for later sessions
+cat >> ~/oidc-lab.env <<EOF
+APP_REPO="$APP_REPO"
+APP_PREFIX="$APP_PREFIX"
+ID_RG="$ID_RG"
+AKS_NAME="$AKS_NAME"
+EOF
 ```
 
 Compare `APP_PREFIX` with the `SUBJECT_PREFIX` of the lab repo (Lab 1, Step 0). The owner ID is the same, but the
@@ -51,7 +60,7 @@ Compare `APP_PREFIX` with the `SUBJECT_PREFIX` of the lab repo (Lab 1, Step 0). 
 
 ```bash
 ACR_NAME="acroidclab$RANDOM"     # must be globally unique: 5-50 letters and digits only
-echo "ACR_NAME=$ACR_NAME"        # write it down
+echo "ACR_NAME=\"$ACR_NAME\"" >> ~/oidc-lab.env   # $RANDOM changes every time, so save it now
 az acr create -g "$RG" -n "$ACR_NAME" --sku Basic -o table
 ACR_ID=$(az acr show -n "$ACR_NAME" --query id -o tsv)
 ```
@@ -85,6 +94,8 @@ az identity create -g "$ID_RG" -n id-gh-oidc-app -l "$LOCATION" -o none
 APP_MI_CLIENT_ID=$(az identity show -g "$ID_RG" -n id-gh-oidc-app --query clientId -o tsv)
 APP_MI_PRINCIPAL_ID=$(az identity show -g "$ID_RG" -n id-gh-oidc-app --query principalId -o tsv)
 echo "$APP_MI_CLIENT_ID $APP_MI_PRINCIPAL_ID"
+echo "APP_MI_CLIENT_ID=\"$APP_MI_CLIENT_ID\"" >> ~/oidc-lab.env
+echo "APP_MI_PRINCIPAL_ID=\"$APP_MI_PRINCIPAL_ID\"" >> ~/oidc-lab.env
 ```
 
 > **Why not reuse `id-gh-oidc-lab` from Lab 2?** If two repos share one identity, each repo gets the other's
