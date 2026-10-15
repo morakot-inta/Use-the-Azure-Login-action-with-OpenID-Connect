@@ -1,0 +1,26 @@
+name: 05 - Pull request check
+
+on:
+  pull_request:
+    branches: [main]
+
+# Note: pull requests from forks never get id-token: write, so this only works for same-repo PRs.
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure login (subject = repo:OWNER/REPO:pull_request)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Read-only checks
+        run: |
+          az group show -n "${{ vars.AZURE_RESOURCE_GROUP }}" -o table
+          az resource list -g "${{ vars.AZURE_RESOURCE_GROUP }}" -o table

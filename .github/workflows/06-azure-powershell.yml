@@ -1,0 +1,30 @@
+name: 06 - Azure PowerShell (OIDC)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  powershell:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure login (CLI + PowerShell)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+
+      - name: Run Az PowerShell
+        uses: azure/powershell@v2
+        env:
+          RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+        with:
+          azPSVersion: latest
+          inlineScript: |
+            Get-AzContext | Format-List Account, Subscription, Tenant
+            Get-AzResourceGroup -Name $env:RG | Format-Table ResourceGroupName, Location, ProvisioningState

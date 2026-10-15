@@ -1,0 +1,36 @@
+name: 04 - Deploy via environment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Token subject becomes repo:OWNER/REPO:environment:production
+    environment: production
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+    steps:
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create storage account
+        run: |
+          # Name is unique per repo and stays the same between runs (3-24 lowercase letters/digits).
+          NAME="oidclab$(echo -n "$GITHUB_REPOSITORY" | sha1sum | cut -c1-12)"
+          az storage account create -n "$NAME" -g "$RG" \
+            --sku Standard_LRS --kind StorageV2 \
+            --min-tls-version TLS1_2 --allow-blob-public-access false \
+            -o none
+          ENDPOINT=$(az storage account show -n "$NAME" -g "$RG" --query primaryEndpoints.blob -o tsv)
+          echo "Deployed $NAME -> $ENDPOINT"
+          echo "### Deployed \`$NAME\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "$ENDPOINT" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,56 @@
+name: 02 - Inspect OIDC token claims
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  claims-branch:
+    name: Claims (no environment)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decode token claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Request the same token azure/login would use. Print the claims only, never the raw token.
+            const token = await core.getIDToken('api://AzureADTokenExchange');
+            const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+            core.info(JSON.stringify(claims, null, 2));
+            const minutes = Math.round((claims.exp - claims.iat) / 60);
+            await core.summary
+              .addHeading(`Job: ${process.env.GITHUB_JOB}`, 3)
+              .addTable([
+                [{ data: 'Claim', header: true }, { data: 'Value', header: true }],
+                ['sub', claims.sub], ['aud', String(claims.aud)], ['iss', claims.iss],
+                ['ref', claims.ref], ['environment', claims.environment ?? '(none)'],
+                ['lifetime', `${minutes} minutes`],
+              ])
+              .write();
+
+  claims-environment:
+    name: Claims (environment = production)
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Decode token claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Request the same token azure/login would use. Print the claims only, never the raw token.
+            const token = await core.getIDToken('api://AzureADTokenExchange');
+            const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+            core.info(JSON.stringify(claims, null, 2));
+            const minutes = Math.round((claims.exp - claims.iat) / 60);
+            await core.summary
+              .addHeading(`Job: ${process.env.GITHUB_JOB}`, 3)
+              .addTable([
+                [{ data: 'Claim', header: true }, { data: 'Value', header: true }],
+                ['sub', claims.sub], ['aud', String(claims.aud)], ['iss', claims.iss],
+                ['ref', claims.ref], ['environment', claims.environment ?? '(none)'],
+                ['lifetime', `${minutes} minutes`],
+              ])
+              .write();

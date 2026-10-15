@@ -1,0 +1,53 @@
+name: 03 - Break it on purpose
+
+# Every scenario here is EXPECTED TO FAIL. Read the error message, then see docs/04-break-it.md.
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Which mistake to make
+        type: choice
+        options:
+          - missing-id-token-permission
+          - wrong-audience
+          - unknown-client-id
+
+jobs:
+  missing-id-token-permission:
+    if: inputs.scenario == 'missing-id-token-permission'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read          # id-token: write is missing
+    steps:
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+  wrong-audience:
+    if: inputs.scenario == 'wrong-audience'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          audience: api://SomethingElse   # does not match the federated credential
+
+  unknown-client-id:
+    if: inputs.scenario == 'unknown-client-id'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: azure/login@v2
+        with:
+          client-id: 00000000-0000-0000-0000-000000000001   # no such app
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
