@@ -75,7 +75,7 @@ az identity federated-credential create \
 ```
 
 Portal: **Managed Identities → id-gh-oidc-lab → Settings → Federated credentials → Add credential** →
-scenario **GitHub Actions deploying Azure resources** → Entity **Branch**, Branch **main**.
+scenario **GitHub Actions deploying Azure resources** → Organization = your GitHub username or org, Entity **Branch**, Branch **main**.
 
 ## Step 5: Your turn: the environment credential
 

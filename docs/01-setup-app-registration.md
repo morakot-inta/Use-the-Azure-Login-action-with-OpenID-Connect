@@ -14,7 +14,7 @@ Open a terminal (or [Cloud Shell](https://shell.azure.com)) and keep it open for
 az login
 az account show -o table          # is this the subscription you want? If not: az account set -s <id>
 
-GITHUB_REPO="your-user/your-repo"   # YOUR fork, exactly as it appears on GitHub (case matters)
+GITHUB_REPO="your-user/your-repo"   # YOUR repo: <username or org>/<repo>, exactly as on GitHub (case matters)
 RG="rg-oidc-lab"                    # where the workflows deploy
 LOCATION="southeastasia"
 SUB_ID=$(az account show --query id -o tsv)
@@ -106,6 +106,9 @@ az ad app federated-credential create --id "$APP_ID" --parameters @fic-main.json
 Portal: **App registrations → gh-oidc-lab → Certificates & secrets → Federated credentials → Add credential** →
 scenario **GitHub Actions deploying Azure resources** → fill in Organization, Repository, Entity type **Branch**, Branch **main**.
 Look at the *Subject identifier* that the portal builds for you.
+
+> **Personal GitHub account (no organization)?** Type your **GitHub username** in the *Organization* field.
+> GitHub treats a user and an organization the same way here: `repo:<username>/<repo>:...`
 
 | Field | Why |
 |-------|-----|
