@@ -46,7 +46,7 @@ k8s/                 Sample app deployed to AKS in Lab 8
 ```
 
 > **Cost:** Labs 1–7 create only one Standard_LRS storage account (a few cents).
-> Lab 8 adds an AKS cluster with one `Standard_B2s` node (about USD 1 per day; stop it with `az aks stop` when you are not using it).
+> Lab 8 adds an AKS cluster with one `Standard_B2s_v2` node (about USD 1–2 per day; stop it with `az aks stop` when you are not using it).
 > Lab 9 adds an ACR Basic registry (about USD 0.17 per day).
 > Lab 10 shows how to delete everything.
 

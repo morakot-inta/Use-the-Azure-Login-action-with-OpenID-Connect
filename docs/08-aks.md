@@ -21,7 +21,7 @@ You will learn that there are **two layers of permission**:
 | Azure (ARM) | Can you *see* the cluster and download a kubeconfig? | Contributor on `rg-oidc-lab` (Labs 1 and 2) |
 | Kubernetes (data plane) | What can you do *inside* the cluster? | **Azure Kubernetes Service RBAC Writer** on namespace `oidc-lab` (this lab) |
 
-> **Cost:** One `Standard_B2s` node costs about USD 1 per day. Stop the cluster when you are not using it (Step 7).
+> **Cost:** One `Standard_B2s_v2` node costs about USD 1–2 per day. Stop the cluster when you are not using it (Step 7).
 
 ## Step 1: Create the cluster
 
@@ -53,7 +53,7 @@ az provider register --namespace Microsoft.ContainerService   # once per subscri
 
 az aks create -g rg-oidc-lab -n aks-oidc-lab \
   --tier free \
-  --node-count 1 --node-vm-size Standard_B2s \
+  --node-count 1 --node-vm-size Standard_B2s_v2 \
   --enable-aad --enable-azure-rbac \
   --disable-local-accounts \
   --generate-ssh-keys
@@ -61,10 +61,23 @@ az aks create -g rg-oidc-lab -n aks-oidc-lab \
 
 | Flag | Why |
 |------|-----|
-| `--tier free`, `--node-count 1`, `--node-vm-size Standard_B2s` | Cheapest setup for a lab. No quota for B2s? Try `Standard_D2s_v5`. |
+| `--tier free`, `--node-count 1`, `--node-vm-size Standard_B2s_v2` | Cheap setup for a lab (2 vCPU, 8 GB). See *VM size errors* below. |
 | `--enable-aad` | Kubernetes logins go through Entra ID, the same place that accepts the GitHub OIDC token |
 | `--enable-azure-rbac` | Kubernetes permissions are **Azure role assignments**, so you manage them with `az role assignment` |
 | `--disable-local-accounts` | No static admin kubeconfig. See the note below. |
+
+**VM size errors.** Not every size is allowed in every subscription and region.
+
+| Error | What to do |
+|-------|------------|
+| `The VM size of Standard_XXX is not allowed in your subscription in location ...` | The error lists the sizes you **can** use. Pick a small one with 2 vCPUs, for example `Standard_B2s_v2`, `Standard_B2as_v2`, `Standard_D2s_v5` or `Standard_D2as_v5`. |
+| `QuotaExceeded` / `Insufficient regional vcpu quota` | Your subscription has no vCPU quota left for that VM family. Try a size from another family (B → D), or request more quota: **Portal → Quotas → Compute**. |
+
+To see which small sizes your subscription can use in the region:
+```bash
+az vm list-skus -l "$LOCATION" --resource-type virtualMachines \
+  --query "[?!restrictions].name" -o tsv | grep -Ei '^Standard_(B2s|B2as|D2s|D2as)_v[2-6]$'
+```
 
 Portal: **Kubernetes services → Create → Kubernetes cluster**. On the **Basics** tab choose the cheapest options.
 On the **Security** (or **Access**) tab, choose *Microsoft Entra ID authentication with Azure RBAC* and turn off
