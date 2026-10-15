@@ -5,7 +5,7 @@ GitHub issues a short-lived OIDC token, and Microsoft Entra ID swaps it for an A
 because you set up a *federated identity credential* that trusts it.
 
 You build every piece **by hand**, one command (or one portal click) at a time, and check the result after each step.
-The only script creates the AKS cluster for Lab 8. Everything about the OIDC trust you build yourself.
+There are no setup scripts, so you see and understand everything you create.
 
 You will set up the trust with **two kinds of Azure identity** and compare them:
 
@@ -42,7 +42,6 @@ You will set up the trust with **two kinds of Azure identity** and compare them:
 .github/workflows/   Lab workflows (01–07)
 docs/                Step-by-step lab guides (00–09)
 k8s/                 Sample app deployed to AKS in Lab 8
-scripts/             create-aks.sh (Lab 8 only)
 ```
 
 > **Cost:** Labs 1–7 create only one Standard_LRS storage account (a few cents).

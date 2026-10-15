@@ -23,31 +23,71 @@ You will learn that there are **two layers of permission**:
 
 > **Cost:** One `Standard_B2s` node costs about USD 1 per day. Stop the cluster when you are not using it (Step 7).
 
-## Step 1: Create the cluster with the script
+## Step 1: Create the cluster
 
-Read [`scripts/create-aks.sh`](../scripts/create-aks.sh) first. It is short and every flag has a comment. Then:
+### 1.1 Install kubectl and kubelogin (once)
 
 ```bash
-az aks install-cli     # once: installs kubectl and kubelogin (may need sudo)
-                       # macOS alternative: brew install kubectl Azure/kubelogin/kubelogin
-./scripts/create-aks.sh
+az aks install-cli        # may need sudo
+# macOS alternative: brew install kubectl Azure/kubelogin/kubelogin
+kubectl version --client && kubelogin --version
 ```
 
-The script:
-- creates `aks-oidc-lab` in `rg-oidc-lab` with **Entra ID integration + Azure RBAC** and **local accounts disabled**
-- gives **you** the *Azure Kubernetes Service RBAC Cluster Admin* role, so you can run the next steps
-- connects your `kubectl`
+### 1.2 Create the AKS cluster (about 5–10 minutes)
 
-It does **not** give the GitHub identities any access. You do that yourself in Step 3.
-
-Check it:
 ```bash
-kubectl get nodes
+az provider register --namespace Microsoft.ContainerService   # once per subscription
+
+az aks create -g rg-oidc-lab -n aks-oidc-lab \
+  --tier free \
+  --node-count 1 --node-vm-size Standard_B2s \
+  --enable-aad --enable-azure-rbac \
+  --disable-local-accounts \
+  --generate-ssh-keys
 ```
+
+| Flag | Why |
+|------|-----|
+| `--tier free`, `--node-count 1`, `--node-vm-size Standard_B2s` | Cheapest setup for a lab. No quota for B2s? Try `Standard_D2s_v5`. |
+| `--enable-aad` | Kubernetes logins go through Entra ID, the same place that accepts the GitHub OIDC token |
+| `--enable-azure-rbac` | Kubernetes permissions are **Azure role assignments**, so you manage them with `az role assignment` |
+| `--disable-local-accounts` | No static admin kubeconfig. See the note below. |
+
+Portal: **Kubernetes services → Create → Kubernetes cluster**. On the **Basics** tab choose the cheapest options.
+On the **Security** (or **Access**) tab, choose *Microsoft Entra ID authentication with Azure RBAC* and turn off
+*local accounts*.
 
 > **Why `--disable-local-accounts`?** Contributor includes `listClusterAdminCredential`. With local accounts enabled,
 > your GitHub identity (Contributor on the RG) could run `az aks get-credentials --admin` and become
 > **cluster-admin**, skipping all Kubernetes RBAC. You test this in Step 6.
+
+### 1.3 Give yourself cluster admin
+
+With Azure RBAC enabled, even the Owner of the subscription has **no** rights inside Kubernetes until a role is assigned.
+
+```bash
+AKS_ID=$(az aks show -g rg-oidc-lab -n aks-oidc-lab --query id -o tsv)
+ME=$(az ad signed-in-user show --query id -o tsv)
+
+az role assignment create \
+  --assignee-object-id "$ME" --assignee-principal-type User \
+  --role "Azure Kubernetes Service RBAC Cluster Admin" \
+  --scope "$AKS_ID" -o table
+```
+
+### 1.4 Connect kubectl
+
+```bash
+az aks get-credentials -g rg-oidc-lab -n aks-oidc-lab --overwrite-existing
+kubelogin convert-kubeconfig -l azurecli    # use your `az login` session to get Kubernetes tokens
+kubectl get nodes
+```
+
+Look at `~/.kube/config`: there is **no password or certificate for you** in it, only an `exec` entry that calls `kubelogin`.
+
+> `Forbidden` on `kubectl get nodes`? The role assignment from 1.3 can take 2–5 minutes to start working. Wait and try again.
+
+So far **only you** have access. You give the GitHub identities access yourself in Step 3.
 
 ## Step 2: Create the namespace
 
