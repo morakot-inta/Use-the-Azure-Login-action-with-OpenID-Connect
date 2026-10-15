@@ -1,4 +1,4 @@
-# Lab 5: Deploy through a protected GitHub environment
+# Lab 6: Deploy through a protected GitHub environment
 
 Workflow: [`.github/workflows/04-deploy-environment.yml`](../.github/workflows/04-deploy-environment.yml)
 
@@ -14,7 +14,7 @@ trusts `environment:production`, only jobs that pass the environment's protectio
 ## 2. Run the deploy
 
 ```bash
-gh workflow run 04-deploy-environment.yml --ref main
+gh workflow run 04-deploy-environment.yml --ref main -f identity=app-registration
 ```
 
 The run pauses at **Waiting for review**. Approve it in the Actions UI. The job then:
@@ -30,12 +30,15 @@ az storage account list -g rg-oidc-lab -o table
 
 ## 3. Prove the environment is the security boundary
 
-1. Delete the `gh-env-production` federated credential:
+1. Run the deploy again with `-f identity=managed-identity`. It works too: the managed identity also has a
+   `gh-env-production` credential (Lab 2, Step 5), and the storage account already exists, so nothing changes.
+2. Delete the managed identity's environment credential:
    ```bash
-   az ad app federated-credential delete --id <APP_ID> --federated-credential-id gh-env-production
+   az identity federated-credential delete -g rg-oidc-lab-identity --identity-name id-gh-oidc-lab -n gh-env-production --yes
    ```
-2. Run the deploy again. It fails with `AADSTS700213`, even though the branch is `main`, because the subject is now the environment form.
-3. Run `./scripts/setup-oidc.sh` again to restore the credential.
+3. Run the deploy with `managed-identity` again. It fails with `AADSTS700213`, even though the branch is `main`
+   and the identity still has a `gh-branch-main` credential, because the job's subject is now the environment form.
+4. Create the credential again yourself (Lab 2, Step 5) and check that the deploy works.
 
 ## Questions
 
@@ -43,4 +46,4 @@ az storage account list -g rg-oidc-lab -o table
    (Hint: who can push to `main`, and who can approve the `production` environment?)
 2. How would you set up `dev`, `test` and `prod` with a different Azure identity and scope for each?
 
-Next: [Lab 6: Pull requests & PowerShell](06-pr-and-powershell.md)
+Next: [Lab 7: Pull requests & PowerShell](07-pr-and-powershell.md)

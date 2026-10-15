@@ -2,6 +2,14 @@ name: 04 - Deploy via environment
 
 on:
   workflow_dispatch:
+    inputs:
+      identity:
+        description: Which Azure identity to sign in as
+        type: choice
+        default: app-registration
+        options:
+          - app-registration
+          - managed-identity
 
 permissions:
   id-token: write
@@ -18,7 +26,7 @@ jobs:
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets[inputs.identity == 'managed-identity' && 'AZURE_MI_CLIENT_ID' || 'AZURE_CLIENT_ID'] }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 

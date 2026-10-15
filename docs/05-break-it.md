@@ -1,4 +1,4 @@
-# Lab 4: Break it on purpose (troubleshooting)
+# Lab 5: Break it on purpose (troubleshooting)
 
 Workflow: [`.github/workflows/03-break-it.yml`](../.github/workflows/03-break-it.yml)
 
@@ -46,7 +46,8 @@ AADSTS700016: Application with identifier '...' was not found in the directory .
 You do not need the break-it workflow for this one. Run the normal login workflow on a branch that has no credential:
 
 ```bash
-gh workflow run 01-login-oidc.yml --ref feature/test
+gh workflow run 01-login-oidc.yml --ref feature/test -f identity=app-registration
+gh workflow run 01-login-oidc.yml --ref feature/test -f identity=managed-identity
 ```
 
 Typical error:
@@ -54,15 +55,17 @@ Typical error:
 AADSTS700213: No matching federated identity record found for presented assertion subject
 'repo:OWNER/REPO:ref:refs/heads/feature/test'
 ```
+Both identities fail the same way, because neither has a credential for this subject.
+
 **Fix:** The error tells you the exact subject. Either add a federated credential for it, or (better) deploy only from
 `main` or an environment. Subjects must match exactly: wildcards are **not** supported in standard federated credentials.
 
 ## Troubleshooting checklist
 
 1. Is `id-token: write` set on the job?
-2. Does the `sub` from the error, or from Lab 3, match a credential **exactly**, including case?
+2. Does the `sub` from the error, or from Lab 4, match a credential **exactly**, including case?
 3. Does the job use an `environment`? If so, the subject is `environment:NAME`, not `ref:...`.
-4. Is the client ID the *application* ID, and is the tenant ID correct?
+4. Is the client ID the *application* ID (app registration) or the *client* ID (managed identity), not an object or principal ID,, and is the tenant ID correct?
 5. Login works but commands fail with `AuthorizationFailed`? Then OIDC is fine. Check the **RBAC** role and scope.
 
-Next: [Lab 5: Environments](05-environments.md)
+Next: [Lab 6: Environments](06-environments.md)

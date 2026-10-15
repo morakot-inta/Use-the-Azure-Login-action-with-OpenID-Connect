@@ -20,18 +20,34 @@ sequenceDiagram
     W->>G: Request ID token (needs permission id-token: write)
     G-->>W: Signed JWT (iss, sub, aud, repo, ref, ...)
     W->>E: azure/login sends JWT as a client assertion<br/>(client-id + tenant-id)
-    E->>E: Find a federated credential on the app<br/>where issuer + subject + audience match
+    E->>E: Look up the identity by client-id, then find a federated<br/>credential where issuer + subject + audience match
     E-->>W: Azure access token (about 1 hour)
     W->>A: az / Az PowerShell calls, authorized by RBAC
 ```
+
+Note step 4: the **client-id** chooses *which Azure identity* to sign in as. The GitHub token is exactly the same
+whichever identity you use.
+
+## Two kinds of identity that can trust GitHub
+
+|  | App registration + service principal (Lab 1) | User-assigned managed identity (Lab 2) |
+|---|---|---|
+| What it is | An application object in **Entra ID** | An **Azure resource** in a resource group |
+| Permission needed to create it | Entra: create app registrations | Azure RBAC: *Managed Identity Contributor* on the RG |
+| Can it have a client secret? | Yes. Avoid that. | **No, never.** |
+| Federated credentials | Up to 20 | Up to 20 |
+| Lifecycle | Lives until you delete it | Deleted when its resource group is deleted |
+| Who can change its federated credentials | App owners and Entra admins | Anyone with write access on the identity resource (for example, Contributor on its RG) |
+| `client-id` in `azure/login` | Application (client) ID | The identity's Client ID |
+
+In both cases Azure RBAC roles are assigned to a **service principal**. A managed identity just has one that Azure
+creates and manages for you.
 
 ## Key terms
 
 | Term | Meaning in this lab |
 |------|---------------------|
-| **App registration** | The identity object in Entra ID. Its *Application (client) ID* is `AZURE_CLIENT_ID`. |
-| **Service principal** | The app's instance in your tenant. Azure RBAC roles are assigned to it. |
-| **Federated identity credential** | A trust rule on the app: *"accept tokens from this issuer, with this subject, for this audience"*. You can add up to 20 per app. |
+| **Federated identity credential** | A trust rule on the identity: *"accept tokens from this issuer, with this subject, for this audience"* |
 | **Issuer (`iss`)** | Always `https://token.actions.githubusercontent.com` for GitHub.com |
 | **Audience (`aud`)** | `api://AzureADTokenExchange` (the default used by `azure/login`) |
 | **Subject (`sub`)** | Describes *what is running*. It must match **exactly** (no wildcards). |
@@ -46,15 +62,19 @@ sequenceDiagram
 | Tag `v1.0.0` | `repo:OWNER/REPO:ref:refs/tags/v1.0.0` |
 
 > **Important:** When a job uses an `environment`, the subject becomes the **environment** form,
-> even if it runs on `main`. You will see this in Lab 3 and Lab 5.
+> even if it runs on `main`. You will see this in Lab 4 and Lab 6.
 
-## Do I store anything in GitHub?
+## What gets stored in GitHub?
 
-Yes, but none of these values are secret. They are identifiers:
+None of these values are secret. They are identifiers:
 
-- `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`
+| Name | Value |
+|------|-------|
+| `AZURE_CLIENT_ID` | App registration's client ID (Lab 1) |
+| `AZURE_MI_CLIENT_ID` | Managed identity's client ID (Lab 2) |
+| `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | Your tenant and subscription |
 
 This lab stores them as **repository secrets** (as the Microsoft docs do) so that they are masked in logs.
 Repository variables would also work.
 
-Next: [Lab 1: Set up the trust](01-setup-trust.md)
+Next: [Lab 1: Trust with an app registration](01-setup-app-registration.md)
