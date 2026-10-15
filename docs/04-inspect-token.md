@@ -33,7 +33,7 @@ you then sign in with the app registration or the managed identity.
    ```
    What is `sub` now? Would Azure accept it? (Hint: try `01-login-oidc.yml` on this branch in Lab 5.)
 4. Look at the other claims: `repository_owner_id`, `job_workflow_ref`, `actor`, `event_name`. These are useful
-   for advanced trust rules (see Lab 9).
+   for advanced trust rules (see Lab 10).
 
 > Is the prefix `repo:OWNER@ID/REPO@ID` (immutable) or `repo:OWNER/REPO` (classic)? It must match Lab 1, Step 0.
 > Also look at the `repository_owner_id` and `repository_id` claims: they are the IDs in the immutable prefix.

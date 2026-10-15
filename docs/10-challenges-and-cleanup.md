@@ -1,4 +1,4 @@
-# Lab 9: Challenges and cleanup
+# Lab 10: Challenges and cleanup
 
 ## Challenges (no step-by-step instructions)
 
@@ -32,6 +32,7 @@ GITHUB_REPO="your-user/your-repo"
 APP_ID=$(az ad app list --display-name gh-oidc-lab --query "[0].appId" -o tsv)
 SP_OBJECT_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
 MI_PRINCIPAL_ID=$(az identity show -g rg-oidc-lab-identity -n id-gh-oidc-lab --query principalId -o tsv)
+APP_MI_PRINCIPAL_ID=$(az identity show -g rg-oidc-lab-identity -n id-gh-oidc-app --query principalId -o tsv)
 ```
 
 ### 1. Role assignments first
@@ -41,6 +42,7 @@ If you delete an identity first, its role assignments stay behind as **"Identity
 ```bash
 az role assignment delete --assignee "$SP_OBJECT_ID" --yes
 az role assignment delete --assignee "$MI_PRINCIPAL_ID" --yes
+az role assignment delete --assignee "$APP_MI_PRINCIPAL_ID" --yes
 ```
 
 ### 2. App registration
@@ -55,8 +57,8 @@ Portal: **App registrations → gh-oidc-lab → Delete**. The app stays in **Del
 
 ### 3. Resource groups
 
-Deleting `rg-oidc-lab` also deletes the AKS cluster (Lab 8) and its node resource group `MC_rg-oidc-lab_...`.
-Deleting `rg-oidc-lab-identity` also deletes the managed identity and its federated credentials.
+Deleting `rg-oidc-lab` also deletes the AKS cluster (Lab 8), its node resource group `MC_rg-oidc-lab_...` and the ACR (Lab 9).
+Deleting `rg-oidc-lab-identity` also deletes both managed identities and their federated credentials.
 
 ```bash
 az group delete -n rg-oidc-lab --yes --no-wait
@@ -74,6 +76,12 @@ done
 gh variable delete AZURE_RESOURCE_GROUP --repo "$GITHUB_REPO"
 gh variable delete AKS_CLUSTER_NAME --repo "$GITHUB_REPO"
 gh api --method DELETE "repos/$GITHUB_REPO/environments/production"
+```
+
+The app repo (Lab 9): delete the whole repo, or only its secrets, variables and environment:
+
+```bash
+gh repo delete morakot-inta/oidc-lab-app     # needs: gh auth refresh -s delete_repo
 ```
 
 ### Check that nothing is left

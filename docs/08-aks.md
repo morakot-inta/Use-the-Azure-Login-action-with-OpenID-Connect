@@ -181,6 +181,6 @@ az aks stop  -g rg-oidc-lab -n aks-oidc-lab    # stops the node VMs; your setup 
 az aks start -g rg-oidc-lab -n aks-oidc-lab
 ```
 
-Deleting `rg-oidc-lab` in Lab 9 also deletes the cluster and its node resource group (`MC_rg-oidc-lab_...`).
+Deleting `rg-oidc-lab` in Lab 10 also deletes the cluster and its node resource group (`MC_rg-oidc-lab_...`).
 
-Next: [Lab 9: Challenges & cleanup](09-challenges-and-cleanup.md)
+Next: [Lab 9: A separate application repo](09-app-repo.md)
