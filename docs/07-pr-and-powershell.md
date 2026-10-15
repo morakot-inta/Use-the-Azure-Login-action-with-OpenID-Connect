@@ -19,7 +19,7 @@ Workflow: [`.github/workflows/05-pull-request.yml`](../.github/workflows/05-pull
 >
 > **Security note:** In this lab the PR credential uses the same app as `main`, so the PR job also has **Contributor**.
 > Anyone who can open a PR in your repo could change the workflow and use that access. In real projects, use a
-> **separate app registration with the Reader role** for PRs. That is Challenge 1 in Lab 8.
+> **separate app registration with the Reader role** for PRs. That is Challenge 1 in Lab 9.
 
 Close the PR when you are done: `gh pr close --delete-branch`.
 
@@ -35,4 +35,4 @@ gh workflow run 06-azure-powershell.yml --ref main -f identity=managed-identity
 
 Look at the `Get-AzContext` output: the account is the client ID of the identity you chose.
 
-Next: [Lab 8: Challenges & cleanup](08-challenges-and-cleanup.md)
+Next: [Lab 8: Deploy to AKS](08-aks.md)

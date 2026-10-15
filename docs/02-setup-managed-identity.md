@@ -18,7 +18,7 @@ az group create -n "$ID_RG" -l "$LOCATION" -o table
 write `Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials`. If the identity lived in the
 same resource group, a workflow could **add new federated credentials to its own identity** (for example, for any
 branch) and so escape your trust rules. Keep identities away from the resources they manage. You try this attack in
-Lab 8, Challenge 2.
+Lab 9, Challenge 2.
 
 ## Step 2: Create the managed identity
 

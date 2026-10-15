@@ -33,7 +33,7 @@ you then sign in with the app registration or the managed identity.
    ```
    What is `sub` now? Would Azure accept it? (Hint: try `01-login-oidc.yml` on this branch in Lab 5.)
 4. Look at the other claims: `repository_owner_id`, `job_workflow_ref`, `actor`, `event_name`. These are useful
-   for advanced trust rules (see Lab 8).
+   for advanced trust rules (see Lab 9).
 
 > If GitHub shows a different `sub` format than in the table (for example, because your org has customized the
 > subject claim), **this lab is how you find the exact value** to put in the federated credential.

@@ -1,0 +1,65 @@
+name: 07 - Deploy to AKS (OIDC)
+run-name: Deploy to AKS as ${{ inputs.identity }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      identity:
+        description: Which Azure identity to sign in as
+        type: choice
+        default: app-registration
+        options:
+          - app-registration
+          - managed-identity
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+  AKS_NAME: ${{ vars.AKS_CLUSTER_NAME }}
+  NAMESPACE: oidc-lab
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install tools BEFORE logging in: the GitHub OIDC token is short-lived, and kubelogin
+      # needs it to get a Kubernetes token later in the job.
+      - name: Install kubectl + kubelogin
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          az aks install-cli --install-location "$HOME/.local/bin/kubectl" \
+            --kubelogin-install-location "$HOME/.local/bin/kubelogin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets[inputs.identity == 'managed-identity' && 'AZURE_MI_CLIENT_ID' || 'AZURE_CLIENT_ID'] }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get kubeconfig (user credentials, no admin, no secrets)
+        run: |
+          az aks get-credentials -g "$RG" -n "$AKS_NAME" --overwrite-existing
+          # Make kubectl ask the Azure CLI (logged in with OIDC above) for Kubernetes tokens.
+          kubelogin convert-kubeconfig -l azurecli
+
+      - name: Deploy
+        run: |
+          kubectl apply -n "$NAMESPACE" -f k8s/
+          kubectl rollout status deployment/hello -n "$NAMESPACE" --timeout=180s
+          kubectl get deploy,pods,svc -n "$NAMESPACE" -o wide
+
+      - name: What am I allowed to do? (least privilege)
+        run: |
+          check() { printf '%-45s ' "$*"; kubectl auth can-i "$@" || true; }
+          check create deployments -n "$NAMESPACE"
+          check delete pods -n "$NAMESPACE"
+          check list pods -n kube-system
+          check create namespaces
+          check list nodes

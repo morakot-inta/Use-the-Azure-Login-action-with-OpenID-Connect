@@ -1,4 +1,4 @@
-# Lab 8: Challenges and cleanup
+# Lab 9: Challenges and cleanup
 
 ## Challenges (no step-by-step instructions)
 
@@ -55,6 +55,7 @@ Portal: **App registrations → gh-oidc-lab → Delete**. The app stays in **Del
 
 ### 3. Resource groups
 
+Deleting `rg-oidc-lab` also deletes the AKS cluster (Lab 8) and its node resource group `MC_rg-oidc-lab_...`.
 Deleting `rg-oidc-lab-identity` also deletes the managed identity and its federated credentials.
 
 ```bash
@@ -64,13 +65,14 @@ az group delete -n rg-oidc-lab-identity --yes --no-wait
 
 ### 4. GitHub
 
-**Settings → Secrets and variables → Actions**: delete the 4 secrets and the variable. **Settings → Environments**: delete `production`.
+**Settings → Secrets and variables → Actions**: delete the 4 secrets and the 2 variables. **Settings → Environments**: delete `production`.
 
 ```bash
 for s in AZURE_CLIENT_ID AZURE_MI_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
   gh secret delete "$s" --repo "$GITHUB_REPO"
 done
 gh variable delete AZURE_RESOURCE_GROUP --repo "$GITHUB_REPO"
+gh variable delete AKS_CLUSTER_NAME --repo "$GITHUB_REPO"
 gh api --method DELETE "repos/$GITHUB_REPO/environments/production"
 ```
 
@@ -80,4 +82,5 @@ gh api --method DELETE "repos/$GITHUB_REPO/environments/production"
 az group exists -n rg-oidc-lab                       # false (after a few minutes)
 az group exists -n rg-oidc-lab-identity              # false
 az ad app list --display-name gh-oidc-lab -o tsv     # empty
+kubectl config delete-context aks-oidc-lab           # remove the local kubeconfig entry
 ```
